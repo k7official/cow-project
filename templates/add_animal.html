@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Animal</title>
+</head>
+<body>
+    <form action="{{ url_for('add') }}" method="POST">
+        <label>Animal ID:</label>
+        <input name="animal_id" type="text">
+        <label>Ear Tag:</label>
+        <input name="ear_tag" type="text">
+        <label>Animal Type:</label>
+        <input name="animal_type" type="text">
+        <label>Breed:</label>
+        <input name="breed" type="text">
+        <label>Color:</label>
+        <input name="color" type="text">
+        <label for="image">Select photo:</label>
+        <input type="file" id="image" name="image">
+        <button type="submit">Add Animal</button>
+    </form>
+</body>
+</html>
