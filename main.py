@@ -10,7 +10,7 @@ db = SQLAlchemy(app)
 
 
 class Cow(db.Model):
-    animal_id = db.Column(db.String(100), primary_key=True)
+    animal_id = db.Column(db.Integer(100), primary_key=True)
     ear_tag = db.Column(db.String(100), unique=True, nullable=False)
     animal_type = db.Column(db.String(250), nullable=False)
     breed = db.Column(db.String(250), nullable=False)
