@@ -15,7 +15,7 @@ class Img(db.Model):
     pic = db.Column(db.LargeBinary)
 
     def __repr__(self):
-        return f'<Book {self.title}>'
+        return f'<Img {self.title}>'
 
 
 @app.route('/')
