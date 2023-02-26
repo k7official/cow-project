@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-import base64
 
 
 app = Flask(__name__)
@@ -18,11 +17,11 @@ class Cow(db.Model):
     color = db.Column(db.String(250), nullable=False)
 
     def __repr__(self):
-        return f'<Cow {self.title}>'
+        return f'<Book {self.title}>'
 
 
 class Img(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True)
     pic = db.Column(db.LargeBinary)
 
     def __repr__(self):
@@ -42,26 +41,19 @@ def identify():
 @app.route("/add", methods=["GET", "POST"])
 def add():
     if request.method == "POST":
-        # if 'pic' not in request.files:
-        #     # Handle case where no image is uploaded
-        #     pass
-        # else:
-        #     # image_data = request.files['image'].read()
-        #     # encoded_image = base64.b64encode(image_data)
         new_cow = Cow(
             animal_id=request.form["animal_id"],
             ear_tag=request.form["ear_tag"],
             animal_type=request.form["animal_type"],
             breed=request.form["breed"],
             color=request.form["color"],
-            # image=encoded_image
         )
         file = request.files['pic'].read()
-        # print(file)
-        new_img = Img(pic=file)
+        new_img = Img(id=request.form["animal_id"], pic=file)
+        db.session.add(new_img)
+
         # Add record
         db.session.add(new_cow)
-        db.session.add(new_img)
         try:
             db.session.commit()
         except Exception as e:
@@ -79,4 +71,3 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()  # Create all tables before running the app
     app.run(debug=True)
-
