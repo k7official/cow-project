@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+import base64
 
 
 app = Flask(__name__)
@@ -72,6 +73,21 @@ def display_all():
     with app.app_context():
         all_cows = db.session.query(Cow).all()
     return render_template('display_all.html', cows=all_cows)
+
+
+@app.route('/edit', methods=["GET", "POST"])
+def edit():
+    # UPDATE RECORD
+    cow_id = request.args['id']
+    cow_to_update = Cow.query.get(cow_id)
+    image_object = Img.query.get(cow_id)
+    # print(type(image_object))
+    image_to_update = image_object.pic
+    # print(type(image_to_update))
+    encoded_image = base64.b64encode(image_to_update)
+    image = encoded_image.decode('UTF-8')
+    # print(type(image))
+    return render_template('edit.html', cow=cow_to_update, img=image)
 
 
 if __name__ == "__main__":
