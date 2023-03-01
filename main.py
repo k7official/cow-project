@@ -17,7 +17,7 @@ class Cow(db.Model):
     color = db.Column(db.String(250), nullable=False)
 
     def __repr__(self):
-        return f'<Book {self.title}>'
+        return f'<Cow {self.animal_id}>'
 
 
 class Img(db.Model):
@@ -65,6 +65,13 @@ def add():
         return redirect(url_for('home'))
 
     return render_template("add_animal.html")
+
+
+@app.route('/display_all', methods=["GET", "POST"])
+def display_all():
+    with app.app_context():
+        all_cows = db.session.query(Cow).all()
+    return render_template('display_all.html', cows=all_cows)
 
 
 if __name__ == "__main__":
