@@ -1,0 +1,15 @@
+Model dependencies
+
+Installing the packages
+
+%pip install ultralytics
+from ultralytics import YOLO
+
+
+YOLOv8
+
+# Load a model
+model = YOLO('model_path')  # load a pre-trained model (recommended for training)
+
+# Use the model
+results = model('https://ultralytics.com/images/bus.jpg')  # predict on an image

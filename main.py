@@ -1,6 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import base64
+from ultralytics import YOLO
+import os
+
+# Load a model
+model = YOLO('best_musa.pt')
 
 
 app = Flask(__name__)
@@ -37,6 +42,42 @@ def home():
 @app.route('/identify', methods=["GET", "POST"])
 def identify():
     return render_template("identify.html")
+
+
+@app.route('/predict', methods =["GET", "POST"])
+def predict():
+    if request.method == "POST":
+        # TODO: file is a byte string that represents the contents of the uploaded file.
+        #  need to convert it back to image for the format required by the model
+        file = request.files['fileUpload'].read()
+        print(type(file))
+        results = model(file, save=True)  # predict on an image....results not image
+        print(results)
+
+        # set the path to the directory where the results will be saved
+        results_dir = '/Users/musa.official/PycharmProjects/project-webapp/runs/detect'
+
+        # run the object detection model and save the results to a file in the results_dir directory
+        # ...
+
+        # get the list of files in the results_dir directory
+        files = os.listdir(results_dir)
+
+        # filter the list of files to include only files starting with 'predict'
+        predict_files = [f for f in files if f.startswith('predict')]
+
+        # sort the list of predict_files based on modification time, in descending order
+        predict_files.sort(key=lambda x: os.path.getmtime(os.path.join(results_dir, x)), reverse=True)
+
+        # get the latest predict file
+        latest_predict_file = predict_files[0]
+
+        # get the full path of the latest predict file
+        latest_predict_path = os.path.join(results_dir, latest_predict_file)
+
+        # print the path of the latest predict file....
+        # TODO: think about what to do with the predicted path(file), how to show it to non-technical stakeholders
+        print('Latest predict file:', latest_predict_path)
 
 
 @app.route("/add", methods=["GET", "POST"])
