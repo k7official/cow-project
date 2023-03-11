@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 import base64
 from ultralytics import YOLO
 import os
+import imghdr
 
 # Load a model
 model = YOLO('best_musa.pt')
@@ -49,10 +50,17 @@ def predict():
     if request.method == "POST":
         # TODO: file is a byte string that represents the contents of the uploaded file.
         #  need to convert it back to image for the format required by the model
+        # TODO: maybe create an API that will handle this task because its the second time doing it
         file = request.files['fileUpload'].read()
         print(type(file))
-        results = model(file, save=True)  # predict on an image....results not image
-        print(results)
+        from PIL import Image
+        from io import BytesIO
+
+        # assume `file` is the byte string containing binary data of the JPEG image
+        img = Image.open(BytesIO(file))
+
+        results = model(img, save=True)  # predict on an image....results not image
+        # print(results)
 
         # set the path to the directory where the results will be saved
         results_dir = '/Users/musa.official/PycharmProjects/project-webapp/runs/detect'
@@ -77,7 +85,54 @@ def predict():
 
         # print the path of the latest predict file....
         # TODO: think about what to do with the predicted path(file), how to show it to non-technical stakeholders
-        print('Latest predict file:', latest_predict_path)
+        # print('Latest predict file:', latest_predict_path)
+
+        image_file = None
+        for file in os.listdir(latest_predict_path):
+            file_path = os.path.join(latest_predict_path, file)
+            if os.path.isfile(file_path):
+                if imghdr.what(file_path) is not None:
+                    # the file is an image file
+                    image_file = file_path
+                    break
+
+        if image_file is not None:
+            # an image file was found
+            image_path = image_file
+        else:
+            print('Image file not found.')
+
+        # find the image file in the directory
+        image_file = None
+        for file in os.listdir(latest_predict_path):
+            if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp')):
+                # the file is an image file
+                image_file = os.path.join(latest_predict_path, file)
+                break
+        print(image_file)
+        # use the HTML code to display the image
+        # if image_file is not None:
+        #     html = f"<img src='data:image/jpg;base64,{image_file}' alt='Image'>"
+        # else:
+        #     html = "<p>Error: Failed to load image.</p>"
+        #
+        # # return the HTML code to the client
+        # return html
+        # import time
+        # time.sleep(10)
+         # from PIL import Image
+        # img = Image.open(image_file)
+        # img.show()
+        import shutil
+        src_path = image_file
+        dest_dir = 'static'
+        # copy the file from the source path to the destination directory
+        shutil.copy(src_path, dest_dir)
+        img_path = file
+        # return send_from_directory(latest_predict_path, file)
+
+        return render_template('predictions.html', img_path=img_path)
+    return redirect(url_for('home'))
 
 
 @app.route("/add", methods=["GET", "POST"])
@@ -135,3 +190,6 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()  # Create all tables before running the app
     app.run(debug=True)
+
+    # TODO: When model is finished, need to modify the output folder of the model to be static/image0
+    # https://stackoverflow.com/questions/54442797/serving-html-from-flask-cant-find-image
