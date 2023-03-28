@@ -12,7 +12,7 @@
     <ul>
         {% for cow in cows %}
         <li>{{cow.animal_id}} - {{cow.ear_tag}} - {{cow.animal_type}} - {{cow.breed}} - {{cow.color}}
-            <a href="{{ url_for('edit', id=cow.animal_id) }}">Edit data</a>
+            <a href="{{ url_for('views.edit', id=cow.animal_id) }}">Edit data</a>
         </li>
         {% endfor %}
     </ul>

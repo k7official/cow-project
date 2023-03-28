@@ -1,52 +1,30 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
+from flask import Blueprint, render_template, request, redirect, url_for
 import base64
 from ultralytics import YOLO
 import os
 import imghdr
+from .models import Cow, Img
+from . import db
 
-# Load a model
-model = YOLO('best_musa.pt')
-
-
-app = Flask(__name__)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+views = Blueprint('views', __name__)
 
 
-class Cow(db.Model):
-    animal_id = db.Column(db.Integer(), primary_key=True)
-    ear_tag = db.Column(db.String(100), unique=True, nullable=False)
-    animal_type = db.Column(db.String(250), nullable=False)
-    breed = db.Column(db.String(250), nullable=False)
-    color = db.Column(db.String(250), nullable=False)
-
-    def __repr__(self):
-        return f'<Cow {self.animal_id}>'
-
-
-class Img(db.Model):
-    id = db.Column(db.Integer(), primary_key=True)
-    pic = db.Column(db.LargeBinary)
-
-    def __repr__(self):
-        return f'<Img {self.title}>'
-
-
-@app.route('/')
+@views.route('/')
 def home():
     return render_template("index.html")
 
 
-@app.route('/identify', methods=["GET", "POST"])
+@views.route('/identify', methods=["GET", "POST"])
 def identify():
     return render_template("identify.html")
 
 
-@app.route('/predict', methods=["GET", "POST"])
+@views.route('/predict', methods=["GET", "POST"])
 def predict():
+
+    # Load a model
+    model = YOLO('best_musa.pt')
+
     if request.method == "POST":
         # TODO: file is a byte string that represents the contents of the uploaded file.
         #  need to convert it back to image for the format required by the model
@@ -135,7 +113,7 @@ def predict():
     return redirect(url_for('home'))
 
 
-@app.route("/add", methods=["GET", "POST"])
+@views.route("/add", methods=["GET", "POST"])
 def add():
     if request.method == "POST":
         new_cow = Cow(
@@ -159,19 +137,19 @@ def add():
         finally:
             db.session.close()
 
-        return redirect(url_for('home'))
+        return redirect(url_for('views.home'))
 
     return render_template("add_animal.html")
 
 
-@app.route('/display_all', methods=["GET", "POST"])
+@views.route('/display_all', methods=["GET", "POST"])
 def display_all():
-    with app.app_context():
-        all_cows = db.session.query(Cow).all()
+    # with app.app_context():
+    all_cows = db.session.query(Cow).all()
     return render_template('display_all.html', cows=all_cows)
 
 
-@app.route('/edit', methods=["GET", "POST"])
+@views.route('/edit', methods=["GET", "POST"])
 def edit():
     # UPDATE RECORD
     cow_id = request.args['id']
@@ -184,12 +162,3 @@ def edit():
     image = encoded_image.decode('UTF-8')
     # print(type(image))
     return render_template('edit.html', cow=cow_to_update, img=image)
-
-
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()  # Create all tables before running the app
-    app.run(debug=True)
-
-    # TODO: When model is finished, need to modify the output folder of the model to be static/image0
-    # https://stackoverflow.com/questions/54442797/serving-html-from-flask-cant-find-image
